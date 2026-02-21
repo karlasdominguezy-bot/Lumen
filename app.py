@@ -13,7 +13,7 @@ load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
 st.set_page_config(
-    page_title="Ing. Pedro - UCE",
+    page_title="Ing. Lumen - UCE",
     page_icon="🦅",
     layout="wide"
 )
@@ -30,7 +30,7 @@ if not os.path.exists(PDF_FOLDER):
 
 # --- RECURSOS GRÁFICOS ---
 LOGO_URL = "UCELOGO.png"
-AVATAR_URL = "Pedro.png"
+AVATAR_URL = "Lumen.png"
 
 # --- 2. FUNCIONES DE LÓGICA (Backend) ---
 
@@ -172,7 +172,7 @@ def estilos_globales():
 
     <div class="footer-credits">
         <div style="font-weight: bold; color: #002F6C; font-size: 11px;">
-            Hecho por: Escuntar Sebástian, Lincango Santiago, Molina Jhostin, Sango Rodrigo, Rosero Ioshua.
+            Hecho por: Narváez Esteban, Tumbaco Daniel, Valencia Gabriel, Morales Steven, Pérez  Bryan.
         </div>
         <div style="font-size: 9px; color: #666;">
             Proyecto Académico | Powered by Google Gemini API
@@ -188,7 +188,7 @@ def sidebar_uce():
         st.markdown("### UCE - FICA")
         st.divider()
         st.title("Navegación")
-        opcion = st.radio("Ir a:", ["💬 Chat con Ing. Pedro", "📂 Gestión de Bibliografía"])
+        opcion = st.radio("Ir a:", ["💬 Chat con Ing. Lumen", "📂 Gestión de Bibliografía"])
         st.divider()
         return opcion
 
@@ -212,7 +212,7 @@ def interfaz_gestor_archivos():
             )
             
     with col_contenido:
-        st.info("Ayuda al Ing. Pedro a aprender subiendo los sílabos y libros aquí.") 
+        st.info("Ayuda al Ing. Lumen a aprender subiendo los sílabos y libros aquí.") 
         st.markdown("---") 
         
         col1, col2 = st.columns([1, 2]) 
@@ -272,13 +272,13 @@ def interfaz_chat():
         with col_ht:
             st.markdown("""
                 <h2 style='margin-bottom: 0px; padding-top: 0px; color: #002F6C;'>💬 Asistente Virtual</h2>
-                <p style='margin-top: 0px; color: gray; font-size: 14px;'>Ing. Pedro - Tu Tutor Virtual de la FICA</p>
+                <p style='margin-top: 0px; color: gray; font-size: 14px;'>Ing. Lumen - Tu Tutor Virtual de la FICA</p>
             """, unsafe_allow_html=True)
         
         # 2. BIENVENIDA (Siempre visible)
         st.markdown("""
         <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 14px;">
-            <strong>🦅 ¡Hola compañero! Soy el Ing. Pedro.</strong><br>
+            <strong>🦅 ¡Hola compañero! Soy el Ing. Lumen.</strong><br>
             Si quieres conversar sobre algún tema en general, ¡escribe abajo!
             Si necesitas que revise información específica, ve a <b>"Gestión de Bibliografía"</b> y dame los archivos.
         </div>
@@ -324,7 +324,7 @@ def interfaz_chat():
                         contexto_pdf = buscar_informacion(prompt, textos, fuentes)
                         
                         prompt_sistema = f"""
-                        Eres el **Ing. Pedro** (Tutor Virtual FICA - UCE).
+                        Eres el **Ing. Lumen** (Tutor Virtual FICA - UCE).
                         Identidad: Profesional, amable, compañero universitario.
                         
                         CONTEXTO:
