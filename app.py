@@ -32,7 +32,7 @@ if not os.path.exists(PDF_FOLDER):
 LOGO_URL = "UCELOGO.png"
 AVATAR_URL = "Lumen.png"
 
-# --- 2. FUNCIONES DE LÓGICA (Backend) ---
+# --- 2. FUNCIONES DE LÓGICA ---
 
 def get_img_as_base64(file_path):
     try:
@@ -105,7 +105,7 @@ def buscar_informacion(pregunta, textos, fuentes):
 def estilos_globales():
     estilos = """
     <style>
-        .block-container { padding-top: 4rem !important; padding-bottom: 0rem !important; }
+        .block-container { padding-top: 2rem !important; padding-bottom: 0rem !important; }
         
         .footer-credits {
             position: fixed; left: 0; bottom: 0; width: 100%;
@@ -135,23 +135,14 @@ def sidebar_uce():
 def interfaz_gestor_archivos():
     estilos_globales()
     st.header("📂 Gestión de Bibliografía")
-    col_av, col_f = st.columns([1, 2])
-    
-    with col_av:
-        if os.path.exists(AVATAR_URL):
-            img_b64 = get_img_as_base64(AVATAR_URL)
-            st.markdown(f'<img src="data:image/png;base64,{img_b64}" style="width:100%; border-radius:15px;">', unsafe_allow_html=True)
-            
-    with col_f:
-        st.info("Ayuda al Ing. Lumen a aprender subiendo los sílabos y libros aquí.")
-        uploaded_files = st.file_uploader("Cargar PDFs", type="pdf", accept_multiple_files=True)
-        if uploaded_files and st.button("Procesar Documentos", type="primary"):
+    uploaded_files = st.file_uploader("Cargar documentos PDF", type="pdf", accept_multiple_files=True)
+    if uploaded_files:
+        if st.button("Procesar Documentos", type="primary"):
             for f in uploaded_files: guardar_archivo(f)
             leer_pdfs_locales.clear()
-            st.success("✅ Conocimientos integrados.")
+            st.success("✅ Documentos aprendidos.")
             st.rerun()
-            
-    st.subheader("📚 Memoria de Lumen:")
+    
     archivos = os.listdir(PDF_FOLDER)
     for f in archivos:
         c1, c2 = st.columns([4, 1])
@@ -164,81 +155,73 @@ def interfaz_gestor_archivos():
 def interfaz_chat():
     estilos_globales()
     
-    # Estructura de Encabezado (Evita cortes de imagen)
-    col_logo, col_titulo, col_av_small = st.columns([1.2, 3, 1.2])
+    # === ENCABEZADO: Logo UCE | Título | Avatar Lumen (Basado en imagen_05adc1.png) ===
+    col_logo, col_titulo, col_avatar_head = st.columns([1.2, 3, 1.2])
 
     with col_logo:
         if os.path.exists(LOGO_URL):
             st.markdown('<div style="margin-top: 15px;">', unsafe_allow_html=True)
-            st.image(LOGO_URL, width=140)
+            st.image(LOGO_URL, width=150)
             st.markdown('</div>', unsafe_allow_html=True)
 
     with col_titulo:
         st.markdown("""
-            <div style="padding-top: 30px;">
-                <h1 style='margin-bottom: 0px; color: #002F6C; font-size: 2.3rem;'>Asistente Virtual</h1>
+            <div style="text-align: center; padding-top: 30px;">
+                <h1 style='margin-bottom: 0px; color: #002F6C; font-size: 2.5rem;'>Asistente Virtual</h1>
                 <p style='margin-top: 0px; color: gray; font-size: 16px;'>Ing. Lumen - Tu Tutor Virtual de la FICA</p>
             </div>
         """, unsafe_allow_html=True)
 
-    with col_av_small:
+    with col_avatar_head:
         if os.path.exists(AVATAR_URL):
             st.markdown('<div style="margin-top: 10px;">', unsafe_allow_html=True)
-            st.image(AVATAR_URL, width=150)
+            st.image(AVATAR_URL, width=160)
             st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+    # === MENSAJE DE BIENVENIDA (Basado en imagen_0540cb.png) ===
+    st.markdown("""
+    <div style="background-color: #f0f2f6; padding: 15px; border-radius: 5px; margin-bottom: 15px; font-size: 15px; border-left: 5px solid #C59200;">
+        <strong>🦅 ¡Hola! Soy el Ing. Lumen.</strong><br>
+        Si quieres conversar sobre algún tema en general, ¡escribe abajo! Si necesitas que revise información específica, ve a <b>"Gestión de Bibliografía"</b> y dame los archivos.
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Layout de Chat con Avatar lateral (Diseño Lumen solicitado)
-    col_izq, col_der = st.columns([1.5, 3])
+    # Ventana de chat
+    contenedor_chat = st.container(height=380, border=True)
 
-    with col_izq:
-        if os.path.exists(AVATAR_URL):
-            img_b64 = get_img_as_base64(AVATAR_URL)
-            st.markdown(f"""
-                <div style="display: flex; justify-content: center; align-items: center; padding-top: 20px;">
-                    <img src="data:image/png;base64,{img_b64}" style="width: 100%; max-width: 350px; border-radius: 20px; box-shadow: 0px 4px 15px rgba(0,0,0,0.1);">
-                </div>
-            """, unsafe_allow_html=True)
+    # --- Lógica de IA ---
+    modelo, status = conseguir_modelo_disponible()
+    if not modelo:
+        st.error(f"Error: {status}")
+        st.stop()
+    
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-    with col_der:
-        st.markdown("""
-        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 5px solid #C59200;">
-            <strong>🦅 ¡Hola! Soy el Ing. Lumen.</strong><br>
-            Estoy aquí para iluminar tus dudas académicas. Si tienes archivos específicos, súbelos en la sección de bibliografía.
-        </div>
-        """, unsafe_allow_html=True)
+    with contenedor_chat:
+        avatar_bot = AVATAR_URL if os.path.exists(AVATAR_URL) else "assistant"
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"], avatar=avatar_bot if message["role"]=="assistant" else "👤"):
+                st.markdown(message["content"])
 
-        contenedor_chat = st.container(height=400, border=True)
-        
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
+    if prompt := st.chat_input("Escribe tu consulta aquí..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.rerun()
 
+    if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
         with contenedor_chat:
-            avatar_icon = AVATAR_URL if os.path.exists(AVATAR_URL) else "assistant"
-            for m in st.session_state.messages:
-                with st.chat_message(m["role"], avatar=avatar_icon if m["role"] == "assistant" else "👤"):
-                    st.markdown(m["content"])
-
-        if prompt := st.chat_input("Escribe tu consulta aquí..."):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            st.rerun()
-
-        if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
-            modelo, _ = conseguir_modelo_disponible()
-            with contenedor_chat:
-                with st.chat_message("assistant", avatar=avatar_icon):
-                    placeholder = st.empty()
-                    placeholder.markdown("🦅 *Iluminando la respuesta...*")
-                    try:
-                        textos, fuentes = leer_pdfs_locales()
-                        contexto = buscar_informacion(st.session_state.messages[-1]["content"], textos, fuentes)
-                        model = genai.GenerativeModel(modelo)
-                        response = model.generate_content(f"Eres el Ing. Lumen de la FICA-UCE. Contexto: {contexto}. Pregunta: {st.session_state.messages[-1]['content']}")
-                        placeholder.markdown(response.text)
-                        st.session_state.messages.append({"role": "assistant", "content": response.text})
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+            with st.chat_message("assistant", avatar=avatar_bot):
+                placeholder = st.empty()
+                placeholder.markdown("🦅 *Consultando archivos...*")
+                try:
+                    textos, fuentes = leer_pdfs_locales()
+                    contexto = buscar_informacion(st.session_state.messages[-1]["content"], textos, fuentes)
+                    model = genai.GenerativeModel(modelo)
+                    response = model.generate_content(f"Eres el Ing. Lumen de la FICA-UCE. Contexto: {contexto}. Pregunta: {st.session_state.messages[-1]['content']}")
+                    placeholder.markdown(response.text)
+                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 def main():
     opcion = sidebar_uce()
