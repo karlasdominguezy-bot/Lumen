@@ -35,9 +35,12 @@ AVATAR_URL = "Lumen.png"
 # --- 2. FUNCIONES DE LÓGICA (Backend) ---
 
 def get_img_as_base64(file_path):
-    with open(file_path, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return ""
 
 def conseguir_modelo_disponible():
     try:
@@ -102,77 +105,37 @@ def buscar_informacion(pregunta, textos, fuentes):
         return contexto if hay_relevancia else ""
     except: return ""
 
-# --- 3. DISEÑO VISUAL (CSS AJUSTADO PARA PANTALLA FIJA) ---
+# --- 3. DISEÑO VISUAL ---
 
 def estilos_globales():
     estilos = """
     <style>
-        /* 1. Ocultar scroll general de la página */
-        ::-webkit-scrollbar {
-            width: 8px;
-            background: transparent;
-        }
+        ::-webkit-scrollbar { width: 8px; background: transparent; }
+        .block-container { padding-top: 2rem !important; padding-bottom: 0rem !important; }
 
-        /* 2. Reducir padding superior drásticamente para subir todo */
-        .block-container {
-            padding-top: 2rem !important; /* Más arriba */
-            padding-bottom: 0rem !important;
-        }
-
-        /* 3. Footer Fijo Minimalista */
         .footer-credits {
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            background-color: #ffffff;
-            color: #444;
-            text-align: center;
-            font-size: 11px;
-            padding: 5px;
-            border-top: 2px solid #C59200;
-            z-index: 99999;
-            font-family: sans-serif;
+            position: fixed; left: 0; bottom: 0; width: 100%;
+            background-color: #ffffff; color: #444; text-align: center;
+            font-size: 11px; padding: 5px; border-top: 2px solid #C59200;
+            z-index: 99999; font-family: sans-serif;
         }
         
-        /* 4. Input ajustado */
-        div[data-testid="stBottom"] {
-            padding-bottom: 35px; 
-            background-color: transparent;
-        }
+        div[data-testid="stBottom"] { padding-bottom: 35px; background-color: transparent; }
 
-        /* 5. Estilos Burbujas Chat */
-        [data-testid="stChatMessageAvatar"] {
-            width: 40px !important;
-            height: 40px !important;
-            border-radius: 50% !important;
-        }
-        [data-testid="stChatMessageAvatar"] img {
-            object-fit: contain !important;
-        }
+        [data-testid="stChatMessageAvatar"] { width: 40px !important; height: 40px !important; border-radius: 50% !important; }
+        [data-testid="stChatMessageAvatar"] img { object-fit: contain !important; }
 
-        /* Traducción Uploader */
         [data-testid="stFileUploader"] section > div > div > span,
-        [data-testid="stFileUploader"] section > div > div > small {
-            display: none !important;
-        }
+        [data-testid="stFileUploader"] section > div > div > small { display: none !important; }
         [data-testid="stFileUploader"] section > div > div::after {
             content: "📂 Arrastra y suelta tus archivos PDF aquí";
-            display: block;
-            font-weight: bold;
-            color: #444;
-            margin-bottom: 5px;
-        }
-        
-        /* CSS Extra para centrar verticalmente elementos */
-        [data-testid="stVerticalBlock"] > [style*="flex-direction: row"] {
-            align-items: center;
+            display: block; font-weight: bold; color: #444; margin-bottom: 5px;
         }
     </style>
 
     <div class="footer-credits">
         <div style="font-weight: bold; color: #002F6C; font-size: 11px;">
-            Hecho por: Narváez Esteban, Tumbaco Daniel, Valencia Gabriel, Morales Steven, Pérez  Bryan.
+            Hecho por: Narváez Esteban, Tumbaco Daniel, Valencia Gabriel, Morales Steven, Pérez Bryan.
         </div>
         <div style="font-size: 9px; color: #666;">
             Proyecto Académico | Powered by Google Gemini API
@@ -194,7 +157,6 @@ def sidebar_uce():
 
 def interfaz_gestor_archivos():
     estilos_globales()
-    
     col_hl, col_ht = st.columns([0.8, 5])
     with col_hl:
         if os.path.exists(LOGO_URL): st.image(LOGO_URL, width=90)
@@ -202,14 +164,10 @@ def interfaz_gestor_archivos():
         st.header("Gestión de Bibliografía")
     
     col_avatar, col_contenido = st.columns([1, 3])
-    
     with col_avatar:
         if os.path.exists(AVATAR_URL):
             img_b64 = get_img_as_base64(AVATAR_URL)
-            st.markdown(
-                f'<img src="data:image/png;base64,{img_b64}" style="width:100%; max-width: 300px;">',
-                unsafe_allow_html=True
-            )
+            st.markdown(f'<img src="data:image/png;base64,{img_b64}" style="width:100%; max-width: 300px; border-radius:15px;">', unsafe_allow_html=True)
             
     with col_contenido:
         st.info("Ayuda al Ing. Lumen a aprender subiendo los sílabos y libros aquí.") 
@@ -220,12 +178,9 @@ def interfaz_gestor_archivos():
             uploaded_files = st.file_uploader("Cargar documentos PDF", type="pdf", accept_multiple_files=True) 
             if uploaded_files: 
                 if st.button("Procesar Documentos", type="primary"): 
-                    contador = 0 
-                    for file in uploaded_files: 
-                        guardar_archivo(file) 
-                        contador += 1 
+                    for file in uploaded_files: guardar_archivo(file) 
                     leer_pdfs_locales.clear()
-                    st.success(f"✅ {contador} documentos aprendidos.") 
+                    st.success("✅ Conocimientos integrados.") 
                     st.rerun() 
         with col2: 
             st.subheader("📚 Memoria:") 
@@ -236,120 +191,86 @@ def interfaz_gestor_archivos():
                 for f in archivos: 
                     c1, c2 = st.columns([4, 1]) 
                     c1.text(f"📄 {f}") 
-                    if c2.button("🗑️", key=f, help="Borrar"): 
+                    if c2.button("🗑️", key=f): 
                         eliminar_archivo(f) 
                         leer_pdfs_locales.clear()
-                        st.toast(f"Olvidando: {f}") 
                         st.rerun() 
 
 def interfaz_chat():
     estilos_globales()
-    
     col_izquierda, col_derecha = st.columns([1.2, 3])
     
-    # === COLUMNA 1: AVATAR ESTÁTICO (Siempre visible) ===
     with col_izquierda:
         if os.path.exists(AVATAR_URL):
             img_b64 = get_img_as_base64(AVATAR_URL)
-            # Centrado y fijo
             st.markdown(f"""
                 <div style="display: flex; justify-content: center; align-items: center; height: 85vh;">
-                    <img src="data:image/gif;base64,{img_b64}" style="width: 100%; max-width: 400px; border-radius: 20px;">
+                    <img src="data:image/png;base64,{img_b64}" style="width: 100%; max-width: 400px; border-radius: 20px;">
                 </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown("🤖")
 
-    # === COLUMNA 2: ÁREA DE INTERACCIÓN ===
     with col_derecha:
-        # 1. ENCABEZADO COMPACTO
         col_hl, col_ht = st.columns([0.6, 5]) 
-
         with col_hl:
-            if os.path.exists(LOGO_URL):
-                st.image(LOGO_URL, width=80) 
-
+            if os.path.exists(LOGO_URL): st.image(LOGO_URL, width=80) 
         with col_ht:
             st.markdown("""
                 <h2 style='margin-bottom: 0px; padding-top: 0px; color: #002F6C;'>💬 Asistente Virtual</h2>
                 <p style='margin-top: 0px; color: gray; font-size: 14px;'>Ing. Lumen - Tu Tutor Virtual de la FICA</p>
             """, unsafe_allow_html=True)
         
-        # 2. BIENVENIDA (Siempre visible)
         st.markdown("""
         <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 14px;">
-            <strong>🦅 ¡Hola compañero! Soy el Ing. Lumen.</strong><br>
-            Si quieres conversar sobre algún tema en general, ¡escribe abajo!
-            Si necesitas que revise información específica, ve a <b>"Gestión de Bibliografía"</b> y dame los archivos.
+            <strong>🦅 ¡Hola! Soy el Ing. Lumen.</strong><br>
+            Estoy aquí para iluminar tus dudas académicas. Si tienes archivos específicos, súbelos en la sección de bibliografía.
         </div>
         """, unsafe_allow_html=True)
 
-        # 3. VENTANA DE CHAT (REDUCIDA A 380px PARA QUE QUEPA TODO)
-        # Ajustamos height para que no empuje el contenido hacia arriba
         contenedor_chat = st.container(height=380, border=True)
-
-        modelo, status = conseguir_modelo_disponible()
-        if not modelo:
-            st.error(f"Error de conexión: {status}")
-            st.stop()
+        modelo, _ = conseguir_modelo_disponible()
         
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
         with contenedor_chat:
             avatar_bot = AVATAR_URL if os.path.exists(AVATAR_URL) else "assistant"
-            avatar_user = "👤"
-
             for message in st.session_state.messages:
-                icono = avatar_bot if message["role"] == "assistant" else avatar_user
-                with st.chat_message(message["role"], avatar=icono):
+                with st.chat_message(message["role"], avatar=avatar_bot if message["role"] == "assistant" else "👤"):
                     st.markdown(message["content"])
 
-        # 4. INPUT (Fijo abajo)
         if prompt := st.chat_input("Escribe tu consulta aquí..."):
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()
 
-        # Lógica de respuesta
         if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
-            prompt = st.session_state.messages[-1]["content"]
-            
             with contenedor_chat:
-                 with st.chat_message("assistant", avatar=avatar_bot):
+                with st.chat_message("assistant", avatar=avatar_bot):
                     placeholder = st.empty()
-                    placeholder.markdown("🦅 *Procesando...*")
-                    
+                    placeholder.markdown("🦅 *Iluminando la respuesta...*")
                     try:
                         textos, fuentes = leer_pdfs_locales()
-                        contexto_pdf = buscar_informacion(prompt, textos, fuentes)
+                        contexto_pdf = buscar_informacion(st.session_state.messages[-1]["content"], textos, fuentes)
                         
                         prompt_sistema = f"""
                         Eres el **Ing. Lumen** (Tutor Virtual FICA - UCE).
-                        Identidad: Profesional, amable, compañero universitario.
-                        
-                        CONTEXTO:
-                        {contexto_pdf}
-                        
-                        PREGUNTA: {prompt}
+                        Identidad: Sabio, profesional, colaborador y compañero universitario.
+                        CONTEXTO: {contexto_pdf}
+                        PREGUNTA: {st.session_state.messages[-1]['content']}
                         """
-                        
                         model = genai.GenerativeModel(modelo)
                         response = model.generate_content(prompt_sistema)
-                        
                         placeholder.markdown(response.text)
                         st.session_state.messages.append({"role": "assistant", "content": response.text})
-                        
                     except Exception as e:
                         st.error(f"Error: {e}")
 
-# --- 4. MAIN ---
-
 def main():
     opcion = sidebar_uce()
-
     if opcion == "📂 Gestión de Bibliografía":
         interfaz_gestor_archivos()
-    elif "Chat" in opcion:
+    else:
         interfaz_chat()
 
 if __name__ == "__main__":
